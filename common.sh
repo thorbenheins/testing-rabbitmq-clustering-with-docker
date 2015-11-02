@@ -1,0 +1,5 @@
+username="levvel"
+baseimagename="rabbitclusterbase"
+basecontainername="rabbitclusterbase"
+nodeimagename="rabbitclusternode"
+nodecontainername="rabbitclusternode"
