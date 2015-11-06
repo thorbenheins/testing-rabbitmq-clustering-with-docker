@@ -489,9 +489,9 @@ For demonstration purposes the repository file structure was kept flat to allow 
 
 1. Confirm the Cluster Status:
 
-Note: The cluster will take a few moments to join and sync together. You may see the 'running' field go between False and True a couple times while it stabilizes.  
+    Note: The cluster will take a few moments to join and sync together. You may see the 'running' field go between False and True a couple times while it stabilizes.  
 
-Once the cluster is completes initializing the output will look like:
+    Once the cluster is completes initializing the output will look like:
 
     ```
     $ ./rst 
