@@ -1,6 +1,6 @@
 {
     "Simulation" : {
-        "Name"      : "High Availability Test - Reset Broker and Send 100000 Messages and Stop Broker During Messaging",
+        "Name"      : "High Availability Test - Reset Broker while Sending Messages and Stop Broker During Messaging",
         "StopFile"  : "/tmp/stop_test_ha_1",
         "PauseFile" : "/tmp/pause_test_ha_1",
         "Interval"  : "0.0001",

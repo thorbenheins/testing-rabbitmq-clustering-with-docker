@@ -5,8 +5,13 @@ This repository is built to host a local RabbitMQ cluster inside Docker containe
 
 Additionally, this was built to help demonstrate how to build a base Docker Container and then extend this base into a useable cluster-able version. By going in sequence from steps 1, 2, 3, 4 someone with little Docker experience can start playing with multiple containers hosting a useable RabbitMQ cluster running locally. The code and scripts have only been tested on Fedora.
 
+This cluster supports clients using:
+ - AMQP on Port 5672 
+ - MQTT Non-SSL on Port 1883 
+ - MQTT SSL on Port 8883 (Port is exposed, but no SSL cert is included)
+
 Once the steps are completed here is what your local environment will look like:
-![Environment Overview](http://levvel.io/wp-content/uploads/2015/12/RabbitMQ-Clustering-on-Docker.png)
+![Environment Overview](http://levvel.io/wp-content/uploads/2015/11/RabbitMQ-Clustering-on-Docker-for-use-with-AMQP-and-MQTT.png)
 
 ### Overview
 -----------
@@ -21,17 +26,24 @@ Here is the repository layout and a brief description of the included files.
 ├── 4_stop.sh - Step 4: Stop the cluster using docker-compose
 ├── baseimage                       
 │   └── Dockerfile - Base Image Manifest Dockerfile running a minimal CentOS install
+├── bindings.sh - Show Cluster Bindings
 ├── cluster                         
 │   └── docker-compose.yml - Docker Compose manifest for organizing the cluster, Services, Resources, and Links
 ├── common.sh - Common definitions for images, containers and metadata
 ├── container_ssh.sh - Generic Docker ssh wrapper with argument <cluster_rabbit1_1|cluster_rabbit2_1|cluster_rabbit3_1>
+├── CONTRIBUTING - General Contributing Steps
 ├── _destroy_all_local_containers
 │   └── destroy_all_containers.sh - If something breaks during a build you can destroy all Docker assets to an original state
 ├── end_node_1.sh - Use Docker Compose to take down the RabbitMQ cluster Node 1
 ├── end_node_2.sh - Use Docker Compose to take down the RabbitMQ cluster Node 2
 ├── end_node_3.sh - Use Docker Compose to take down the RabbitMQ cluster Node 3
+├── exchanges.sh - Show Cluster Exchanges
 ├── force_stop.sh - Non-graceful force stop using Docker without Compose - NOT recommended
 ├── list_running_containers.sh - List the Docker containers on the local machine
+├── LICENSE - Apache 2.0 License
+├── msg_queues.sh - Show Cluster Queue Message Details
+├── queues.sh - Show Cluster General Queues
+├── README.md - Readme File
 ├── remove_container.sh - (Optional) Utility cleanup image wrapper for restoring free disk space
 ├── rst - RabbitMQ cluster Status script to quickly inspect the cluster's health
 ├── server
@@ -56,8 +68,28 @@ Here is the repository layout and a brief description of the included files.
 ├── ssh_node_3.sh - SSH into the RabbitMQ Node 3 container using this Docker wrapper
 ├── start_node_1.sh - Use Docker Compose to start the RabbitMQ cluster Node 1 Container
 ├── start_node_2.sh - Use Docker Compose to start the RabbitMQ cluster Node 2 Container
-└── start_node_3.sh - Use Docker Compose to start the RabbitMQ cluster Node 3 Container
-
+├── start_node_3.sh - Use Docker Compose to start the RabbitMQ cluster Node 3 Container
+└── test_simulations - Docker RabbitMQ Cluster Regression Tests with the Message Simulator
+    ├── burst
+    │   └── burst_1_send_100000_messages.json
+    ├── ha
+    │   ├── ha_1_start_sending_and_crash_a_node.json
+    │   ├── ha_2_start_sending_and_stop_then_start_a_node.json
+    │   └── ha_3_network_latency_event_during_messaging.json
+    ├── load
+    │   ├── load_1_send_100000_messages.json
+    │   ├── load_2_start_sending_and_consuming_messages.json
+    │   └── load_3_start_sending_and_leave_consumers_running.json
+    ├── README.MD
+    ├── setup_validation
+    │   ├── __BE_CAREFUL_RESET_CLUSTER.json
+    │   ├── docker_cluster_hello_world.json
+    │   ├── validate_1_docker_remote_access.json
+    │   ├── validate_2_consumer_works.json
+    │   └── validate_3_send_100_messages.json
+    └── stress
+        ├── stress_1_a_send_10000000_msgs_over_fanout_to_many_queues.json
+        └── stress_1_b_send_10000000_msgs_over_fanout_to_many_queues.json
 ```
 
 ### Features
@@ -184,10 +216,10 @@ For demonstration purposes the repository file structure was kept flat to allow 
     ... (skipping output to shorten README)
 
     Step 6 : RUN touch /tmp/firsttimerunning
-     ---> Running in f7f41d7bb202
-     ---> 0a7f23864156
-    Removing intermediate container f7f41d7bb202
-    Successfully built 0a7f23864156
+     ---> Running in c1ea0ef92dfe
+     ---> bd61935b3201
+    Removing intermediate container c1ea0ef92dfe
+    Successfully built bd61935b3201
     $
     ```
 
@@ -209,16 +241,15 @@ For demonstration purposes the repository file structure was kept flat to allow 
     Building new Docker Cluster image(levvel/rabbitclusternode)
     Sending build context to Docker daemon 31.74 kB
     Step 0 : FROM levvel/rabbitclusterbase
-    ---> 0a7f23864156
+    ---> bd61935b3201
 
     ... (skipping output to shorten README)
 
-    Removing intermediate container f5a597c562d9
-    Step 44 : CMD /opt/rabbit/startclusternode.sh
-     ---> Running in 0f410dcf0a00
-     ---> 2f78a96647ab
-    Removing intermediate container 0f410dcf0a00
-    Successfully built 2f78a96647ab
+    Step 46 : CMD /opt/rabbit/startclusternode.sh
+     ---> Running in 6317098abcb9
+     ---> 439e59b05a5e
+    Removing intermediate container 6317098abcb9
+    Successfully built 439e59b05a5e
     $ 
     ```
 
@@ -226,11 +257,11 @@ For demonstration purposes the repository file structure was kept flat to allow 
 
   
     ```
-    $ docker images 
-    REPOSITORY                 TAG                 IMAGE ID            CREATED              VIRTUAL SIZE
-    levvel/rabbitclusternode   latest              2f78a96647ab        About a minute ago   516.5 MB
-    levvel/rabbitclusterbase   latest              0a7f23864156        8 minutes ago        516.5 MB
-    docker.io/centos           latest              ce20c473cd8a        2 weeks ago          172.3 MB
+    $ docker images
+    REPOSITORY                 TAG                 IMAGE ID            CREATED             VIRTUAL SIZE
+    levvel/rabbitclusternode   latest              439e59b05a5e        2 minutes ago       522.1 MB
+    levvel/rabbitclusterbase   latest              bd61935b3201        36 minutes ago      522.1 MB
+    docker.io/centos           latest              ce20c473cd8a        3 weeks ago         172.3 MB
     $ 
     ```
 
@@ -253,10 +284,9 @@ For demonstration purposes the repository file structure was kept flat to allow 
     $ ./list_running_containers.sh 
     Docker Container Images
     CONTAINER ID        IMAGE                      COMMAND                  CREATED             STATUS              PORTS                                                                                  NAMES
-    bab6c45afa9e        levvel/rabbitclusternode   "/bin/sh -c /opt/rabb"   4 seconds ago       Up 2 seconds        4369/tcp, 9100-9105/tcp, 25672/tcp, 0.0.0.0:5674->5672/tcp, 0.0.0.0:15674->15672/tcp   cluster_rabbit3_1
-    45aa08a76a4e        levvel/rabbitclusternode   "/bin/sh -c /opt/rabb"   4 seconds ago       Up 3 seconds        4369/tcp, 9100-9105/tcp, 25672/tcp, 0.0.0.0:5673->5672/tcp, 0.0.0.0:15673->15672/tcp   cluster_rabbit2_1
-    f0403eaba029        levvel/rabbitclusternode   "/bin/sh -c /opt/rabb"   5 seconds ago       Up 4 seconds        4369/tcp, 0.0.0.0:5672->5672/tcp, 9100-9105/tcp, 25672/tcp, 0.0.0.0:15672->15672/tcp   cluster_rabbit1_1
-
+    d6187a4af7f9        levvel/rabbitclusternode   "/bin/sh -c /opt/rabb"   6 seconds ago       Up 4 seconds        4369/tcp, 9100-9105/tcp, 25672/tcp, 0.0.0.0:1885->1883/tcp, 0.0.0.0:5674->5672/tcp, 0.0.0.0:8885->8883/tcp, 0.0.0.0:15674->15672/tcp   cluster_rabbit3_1
+    d20c29edc4a1        levvel/rabbitclusternode   "/bin/sh -c /opt/rabb"   7 seconds ago       Up 5 seconds        4369/tcp, 9100-9105/tcp, 25672/tcp, 0.0.0.0:1884->1883/tcp, 0.0.0.0:5673->5672/tcp, 0.0.0.0:8884->8883/tcp, 0.0.0.0:15673->15672/tcp   cluster_rabbit2_1
+    9c1265c66284        levvel/rabbitclusternode   "/bin/sh -c /opt/rabb"   7 seconds ago       Up 6 seconds        0.0.0.0:1883->1883/tcp, 0.0.0.0:5672->5672/tcp, 4369/tcp, 0.0.0.0:8883->8883/tcp, 9100-9105/tcp, 0.0.0.0:15672->15672/tcp, 25672/tcp   cluster_rabbit1_1
     $
     ```
 
@@ -323,11 +353,9 @@ For demonstration purposes the repository file structure was kept flat to allow 
     $ ./list_running_containers.sh 
     Docker Container Images
     CONTAINER ID        IMAGE                      COMMAND                  CREATED             STATUS                        PORTS                                                                                  NAMES
-    bab6c45afa9e        levvel/rabbitclusternode   "/bin/sh -c /opt/rabb"   2 minutes ago       Up 2 minutes                 4369/tcp, 9100-9105/tcp, 25672/tcp, 0.0.0.0:5674->5672/tcp, 0.0.0.0:15674->15672/tcp   cluster_rabbit3_1
-    45aa08a76a4e        levvel/rabbitclusternode   "/bin/sh -c /opt/rabb"   2 minutes ago       Exited (137) 2 seconds ago                                                                                          cluster_rabbit2_1
-    f0403eaba029        levvel/rabbitclusternode   "/bin/sh -c /opt/rabb"   2 minutes ago       Up 2 minutes                 4369/tcp, 0.0.0.0:5672->5672/tcp, 9100-9105/tcp, 25672/tcp, 0.0.0.0:15672->15672/tcp   cluster_rabbit1_1
-
-
+    d6187a4af7f9        levvel/rabbitclusternode   "/bin/sh -c /opt/rabb"   About a minute ago   Up About a minute            4369/tcp, 9100-9105/tcp, 25672/tcp, 0.0.0.0:1885->1883/tcp, 0.0.0.0:5674->5672/tcp, 0.0.0.0:8885->8883/tcp, 0.0.0.0:15674->15672/tcp   cluster_rabbit3_1
+    d20c29edc4a1        levvel/rabbitclusternode   "/bin/sh -c /opt/rabb"   About a minute ago   Exited (137) 3 seconds ago                                                                                                                                          cluster_rabbit2_1
+    9c1265c66284        levvel/rabbitclusternode   "/bin/sh -c /opt/rabb"   About a minute ago   Up About a minute            0.0.0.0:1883->1883/tcp, 0.0.0.0:5672->5672/tcp, 4369/tcp, 0.0.0.0:8883->8883/tcp, 9100-9105/tcp, 0.0.0.0:15672->15672/tcp, 25672/tcp   cluster_rabbit1_1
     $
     ```
 
@@ -364,10 +392,9 @@ For demonstration purposes the repository file structure was kept flat to allow 
     $ ./list_running_containers.sh 
     Docker Container Images
     CONTAINER ID        IMAGE                      COMMAND                  CREATED             STATUS              PORTS                                                                                  NAMES
-    bab6c45afa9e        levvel/rabbitclusternode   "/bin/sh -c /opt/rabb"   2 minutes ago       Up 2 minutes        4369/tcp, 9100-9105/tcp, 25672/tcp, 0.0.0.0:5674->5672/tcp, 0.0.0.0:15674->15672/tcp   cluster_rabbit3_1
-    45aa08a76a4e        levvel/rabbitclusternode   "/bin/sh -c /opt/rabb"   2 minutes ago       Up 5 seconds        4369/tcp, 9100-9105/tcp, 25672/tcp, 0.0.0.0:5673->5672/tcp, 0.0.0.0:15673->15672/tcp   cluster_rabbit2_1
-    f0403eaba029        levvel/rabbitclusternode   "/bin/sh -c /opt/rabb"   2 minutes ago       Up 2 minutes        4369/tcp, 0.0.0.0:5672->5672/tcp, 9100-9105/tcp, 25672/tcp, 0.0.0.0:15672->15672/tcp   cluster_rabbit1_1
-
+    d6187a4af7f9        levvel/rabbitclusternode   "/bin/sh -c /opt/rabb"   About a minute ago   Up About a minute   4369/tcp, 9100-9105/tcp, 25672/tcp, 0.0.0.0:1885->1883/tcp, 0.0.0.0:5674->5672/tcp, 0.0.0.0:8885->8883/tcp, 0.0.0.0:15674->15672/tcp   cluster_rabbit3_1
+    d20c29edc4a1        levvel/rabbitclusternode   "/bin/sh -c /opt/rabb"   About a minute ago   Up 2 seconds        4369/tcp, 9100-9105/tcp, 25672/tcp, 0.0.0.0:1884->1883/tcp, 0.0.0.0:5673->5672/tcp, 0.0.0.0:8884->8883/tcp, 0.0.0.0:15673->15672/tcp   cluster_rabbit2_1
+    9c1265c66284        levvel/rabbitclusternode   "/bin/sh -c /opt/rabb"   About a minute ago   Up About a minute   0.0.0.0:1883->1883/tcp, 0.0.0.0:5672->5672/tcp, 4369/tcp, 0.0.0.0:8883->8883/tcp, 9100-9105/tcp, 25672/tcp, 0.0.0.0:15672->15672/tcp   cluster_rabbit1_1
     $
     ```
 
@@ -424,79 +451,87 @@ For demonstration purposes the repository file structure was kept flat to allow 
     $
     ```
 
+1. View All Cluster Bindings
+
+    ```
+    $ ./bindings.sh 
+
+    Displaying Cluster Bindings
+
+    No items
+
+    $
+    ```
+
 ### Starting the Cluster
 
-You can start the Cluster Docker Containers by running this command:
+1. You can start the Cluster Docker Containers by running this command:
 
-```
-$ ./3_start.sh 
-Starting cluster_rabbit1_1...
-Starting cluster_rabbit2_1...
-Starting cluster_rabbit3_1...
-$
-```
+    ```
+    $ ./3_start.sh 
+    Starting cluster_rabbit1_1...
+    Starting cluster_rabbit2_1...
+    Starting cluster_rabbit3_1...
+    $
+    ```
 
-Confirm the Containers are running:
+1. Confirm the Containers are running:
 
-```
-$ ./list_running_containers.sh 
-Docker Container Images
-CONTAINER ID        IMAGE                      COMMAND                  CREATED             STATUS              PORTS                                                                                  NAMES
-bab6c45afa9e        levvel/rabbitclusternode   "/bin/sh -c /opt/rabb"   3 minutes ago       Up 2 seconds        4369/tcp, 9100-9105/tcp, 25672/tcp, 0.0.0.0:5674->5672/tcp, 0.0.0.0:15674->15672/tcp   cluster_rabbit3_1
-45aa08a76a4e        levvel/rabbitclusternode   "/bin/sh -c /opt/rabb"   3 minutes ago       Up 3 seconds        4369/tcp, 9100-9105/tcp, 25672/tcp, 0.0.0.0:5673->5672/tcp, 0.0.0.0:15673->15672/tcp   cluster_rabbit2_1
-f0403eaba029        levvel/rabbitclusternode   "/bin/sh -c /opt/rabb"   3 minutes ago       Up 3 seconds        4369/tcp, 0.0.0.0:5672->5672/tcp, 9100-9105/tcp, 25672/tcp, 0.0.0.0:15672->15672/tcp   cluster_rabbit1_1
+    ```
+    $ ./list_running_containers.sh 
+    Docker Container Images
+    CONTAINER ID        IMAGE                      COMMAND                  CREATED             STATUS              PORTS                                                                                  NAMES
+    d6187a4af7f9        levvel/rabbitclusternode   "/bin/sh -c /opt/rabb"   5 minutes ago       Up 40 seconds       4369/tcp, 9100-9105/tcp, 25672/tcp, 0.0.0.0:1885->1883/tcp, 0.0.0.0:5674->5672/tcp, 0.0.0.0:8885->8883/tcp, 0.0.0.0:15674->15672/tcp   cluster_rabbit3_1
+    d20c29edc4a1        levvel/rabbitclusternode   "/bin/sh -c /opt/rabb"   5 minutes ago       Up 40 seconds       4369/tcp, 9100-9105/tcp, 25672/tcp, 0.0.0.0:1884->1883/tcp, 0.0.0.0:5673->5672/tcp, 0.0.0.0:8884->8883/tcp, 0.0.0.0:15673->15672/tcp   cluster_rabbit2_1
+    9c1265c66284        levvel/rabbitclusternode   "/bin/sh -c /opt/rabb"   5 minutes ago       Up 41 seconds       0.0.0.0:1883->1883/tcp, 0.0.0.0:5672->5672/tcp, 4369/tcp, 0.0.0.0:8883->8883/tcp, 9100-9105/tcp, 0.0.0.0:15672->15672/tcp, 25672/tcp   cluster_rabbit1_1
+    $
+    ```
 
-$
-```
-
-Confirm the Cluster Status:
-
-```
+1. Confirm the Cluster Status:
 
 Note: The cluster will take a few moments to join and sync together. You may see the 'running' field go between False and True a couple times while it stabilizes.  
 
 Once the cluster is completes initializing the output will look like:
 
-$ ./rst 
+    ```
+    $ ./rst 
 
-Running Cluster Status
+    Running Cluster Status
 
-+----------------+------+---------+
-|      name      | type | running |
-+----------------+------+---------+
-| rabbit@rabbit1 | disc | True    |
-| rabbit@rabbit2 | ram  | True    |
-| rabbit@rabbit3 | disc | True    |
-+----------------+------+---------+
+    +----------------+------+---------+
+    |      name      | type | running |
+    +----------------+------+---------+
+    | rabbit@rabbit1 | disc | True    |
+    | rabbit@rabbit2 | ram  | True    |
+    | rabbit@rabbit3 | disc | True    |
+    +----------------+------+---------+
 
-$
-```
-
+    $
+    ```
 
 ### Stopping the Cluster
 
-When you want you can stop the Cluster Docker Containers by running this command:
+1. When you want you can stop the Cluster Docker Containers by running this command:
 
-```
-$ ./4_stop.sh 
-Stopping cluster_rabbit3_1... done
-Stopping cluster_rabbit2_1... done
-Stopping cluster_rabbit1_1... done
-$
-```
+    ```
+    $ ./4_stop.sh 
+    Stopping cluster_rabbit3_1... done
+    Stopping cluster_rabbit2_1... done
+    Stopping cluster_rabbit1_1... done
+    $
+    ```
 
-Confirm the Cluster Docker Containers are not running:
+1. Confirm the Cluster Docker Containers are not running:
 
-```
-$ ./list_running_containers.sh 
-Docker Container Images
-CONTAINER ID        IMAGE                      COMMAND                  CREATED             STATUS                            PORTS               NAMES
-bab6c45afa9e        levvel/rabbitclusternode   "/bin/sh -c /opt/rabb"   3 minutes ago       Exited (137) 3 seconds ago                       cluster_rabbit3_1
-45aa08a76a4e        levvel/rabbitclusternode   "/bin/sh -c /opt/rabb"   3 minutes ago       Exited (137) 3 seconds ago                       cluster_rabbit2_1
-f0403eaba029        levvel/rabbitclusternode   "/bin/sh -c /opt/rabb"   3 minutes ago       Exited (137) 3 seconds ago                       cluster_rabbit1_1
-
-$
-```
+    ```
+    $ ./list_running_containers.sh 
+    Docker Container Images
+    CONTAINER ID        IMAGE                      COMMAND                  CREATED             STATUS                            PORTS               NAMES
+    d6187a4af7f9        levvel/rabbitclusternode   "/bin/sh -c /opt/rabb"   4 minutes ago       Exited (137) 33 seconds ago                       cluster_rabbit3_1
+    d20c29edc4a1        levvel/rabbitclusternode   "/bin/sh -c /opt/rabb"   4 minutes ago       Exited (137) 33 seconds ago                       cluster_rabbit2_1
+    9c1265c66284        levvel/rabbitclusternode   "/bin/sh -c /opt/rabb"   4 minutes ago       Exited (137) 33 seconds ago                       cluster_rabbit1_1
+    $
+    ```
 
 Troubleshooting
 ------------------
@@ -544,7 +579,11 @@ Cleanup the Cluster
 1. Please be careful, this will delete all your local Docker Containers and Images
 
     ```
-    $ _destroy_all_local_containers
+    $ ./4_stop.sh 
+    Stopping cluster_rabbit3_1... done
+    Stopping cluster_rabbit2_1... done
+    Stopping cluster_rabbit1_1... done
+    $ cd _destroy_all_local_containers
     $ ./destroy_all_containers.sh 
 
     Destroying containers:
