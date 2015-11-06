@@ -21,6 +21,17 @@
             "PIDDir"        : "/tmp/",
             "TmpConfigDir"  : "/tmp/testVconsumers_",
             "ConsumeQueues" : [
+                        {
+                            "NumConsumers"  : "1",
+                            "Starter"       : "src/__start_rabbit_mq_consumer.py",
+                            "ConsumeInt"    : "0.5",
+                            "CheckDone"     : "0.5",
+                            "Queue"         : "Setup_VC_A_Messages",
+                            "ReplyToQueue"  : "Setup_VC_A_Responses",
+                            "NumberMessages": "10",
+                            "ValidateBody"  : false,
+                            "Expected"      : {}
+                        }
             ]
         },
         "BrokerEntities": {

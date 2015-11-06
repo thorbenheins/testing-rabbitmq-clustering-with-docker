@@ -1,14 +1,14 @@
 {
     "Simulation" : {
-        "Name"      : "High Availability Test - Reset Broker while Sending Messages and Stop-Start a Broker during Messaging",
-        "StopFile"  : "/tmp/stop_test_ha_2",
-        "PauseFile" : "/tmp/pause_test_ha_2",
+        "Name"      : "High Availability Test - Introduce a Network Latency Event during Messaging",
+        "StopFile"  : "/tmp/stop_test_ha_3",
+        "PauseFile" : "/tmp/pause_test_ha_3",
         "Interval"  : "0.0001",
         "CheckDone" : "1.0001",
         "ResetAll"  : true,
         "Type"      : "Rabbit",
         "Rabbit"    : {
-            "Name"          : "HA_2_Pub",
+            "Name"          : "HA_3_Pub",
             "BrokerAddress" : [ "rabbit1", "rabbit2", "rabbit3" ],
             "BrokerURL"     : "amqp://guest:guest@rabbit1:5672/%2F?connection_attempts=3&heartbeat_interval=3600",
             "Account"       : {
@@ -21,7 +21,7 @@
             "Exchanges" : [ 
                         {
                             "Type"          : "Topic",
-                            "Name"          : "HA_2.Ex",
+                            "Name"          : "HA_3.Ex",
                             "Durable"       : true,
                             "AutoDelete"    : false,
                             "Exclusive"     : false,
@@ -30,28 +30,28 @@
             ],
             "Queues"    : [
                         {
-                            "Name"          : "HA_2_A_Messages",
+                            "Name"          : "HA_3_A_Messages",
                             "Durable"       : true,
                             "AutoDelete"    : false,
                             "Exclusive"     : false,
                             "Attributes"    : {}
                         },
                         {
-                            "Name"          : "HA_2_B_Messages",
+                            "Name"          : "HA_3_B_Messages",
                             "Durable"       : true,
                             "AutoDelete"    : false,
                             "Exclusive"     : false,
                             "Attributes"    : {}
                         },
                         {
-                            "Name"          : "HA_2_A_Responses",
+                            "Name"          : "HA_3_A_Responses",
                             "Durable"       : true,
                             "AutoDelete"    : false,
                             "Exclusive"     : false,
                             "Attributes"    : {}
                         },
                         {
-                            "Name"          : "HA_2_B_Responses",
+                            "Name"          : "HA_3_B_Responses",
                             "Durable"       : true,
                             "AutoDelete"    : false,
                             "Exclusive"     : false,
@@ -60,26 +60,26 @@
             ],
             "Bindings"  : [
                         {
-                            "Exchange"      : "HA_2.Ex",
-                            "Queue"         : "HA_2_A_Messages",
-                            "RoutingKey"    : "HA_2.A"
+                            "Exchange"      : "HA_3.Ex",
+                            "Queue"         : "HA_3_A_Messages",
+                            "RoutingKey"    : "HA_3.A"
                         },
                         {
-                            "Exchange"      : "HA_2.Ex",
-                            "Queue"         : "HA_2_B_Messages",
-                            "RoutingKey"    : "HA_2.B"
+                            "Exchange"      : "HA_3.Ex",
+                            "Queue"         : "HA_3_B_Messages",
+                            "RoutingKey"    : "HA_3.B"
                         }
             ],
             "Messages"  : [
                         {
                             "NumberToSend"  : "100",
                             "MessageType"   : "AMQP",
-                            "Exchange"      : "HA_2.Ex",
+                            "Exchange"      : "HA_3.Ex",
                             "Queue"         : "",
-                            "ReplyTo"       : "HA_2_A_Responses",
-                            "RoutingKey"    : "HA_2.A",
+                            "ReplyTo"       : "HA_3_A_Responses",
+                            "RoutingKey"    : "HA_3.A",
                             "Headers"       : {
-                                                "Test"      : "HA 2",
+                                                "Test"      : "HA 3",
                                                 "Message"   : "Route to A"
                                             },
                             "Body"          : {
@@ -100,12 +100,12 @@
                         {
                             "NumberToSend"  : "100",
                             "MessageType"   : "AMQP",
-                            "Exchange"      : "HA_2.Ex",
+                            "Exchange"      : "HA_3.Ex",
                             "Queue"         : "",
-                            "ReplyTo"       : "HA_2_B_Responses",
-                            "RoutingKey"    : "HA_2.B",
+                            "ReplyTo"       : "HA_3_B_Responses",
+                            "RoutingKey"    : "HA_3.B",
                             "Headers"       : {
-                                                "Test"      : "HA 2",
+                                                "Test"      : "HA 3",
                                                 "Message"   : "Route to B"
                                             },
                             "Body"          : {
@@ -125,13 +125,13 @@
                         },
                         {
                             "NumberToSend"  : "1",
-                            "MessageType"   : "Stop Broker",
+                            "MessageType"   : "Add Network Latency Event",
                             "Host"          : "rabbit3",
                             "User"          : "root",
                             "Commands"      : [
-                                                "docker exec -it cluster_rabbit2_1 /opt/simulator/tools/stop_node.sh"
+                                                "docker exec -it cluster_rabbit3_1 iptables -A INPUT -p TCP --sport 25672 -m statistic --mode random --probability 1.0 -j DROP "
                                             ],
-                            "Expected"      : {
+                            "Excepted"      : {
                                                 "Nodes" : [
                                                             {
                                                                 "Name"      : "rabbit1",
@@ -154,12 +154,12 @@
                         {
                             "NumberToSend"  : "500",
                             "MessageType"   : "AMQP",
-                            "Exchange"      : "HA_2.Ex",
+                            "Exchange"      : "HA_3.Ex",
                             "Queue"         : "",
-                            "ReplyTo"       : "HA_2_B_Responses",
-                            "RoutingKey"    : "HA_2.B",
+                            "ReplyTo"       : "HA_3_B_Responses",
+                            "RoutingKey"    : "HA_3.B",
                             "Headers"       : {
-                                                "Test"      : "HA 2",
+                                                "Test"      : "HA 3",
                                                 "Message"   : "Route to B"
                                             },
                             "Body"          : {
@@ -180,12 +180,12 @@
                         {
                             "NumberToSend"  : "500",
                             "MessageType"   : "AMQP",
-                            "Exchange"      : "HA_2.Ex",
+                            "Exchange"      : "HA_3.Ex",
                             "Queue"         : "",
-                            "ReplyTo"       : "HA_2_A_Responses",
-                            "RoutingKey"    : "HA_2.A",
+                            "ReplyTo"       : "HA_3_A_Responses",
+                            "RoutingKey"    : "HA_3.A",
                             "Headers"       : {
-                                                "Test"      : "HA 2",
+                                                "Test"      : "HA 3",
                                                 "Message"   : "Route to A"
                                             },
                             "Body"          : {
@@ -204,14 +204,66 @@
                             "Timestamp"     : ""
                         },
                         {
+                            "NumberToSend"  : "5000",
+                            "MessageType"   : "AMQP",
+                            "Exchange"      : "HA_3.Ex",
+                            "Queue"         : "",
+                            "ReplyTo"       : "HA_3_A_Responses",
+                            "RoutingKey"    : "HA_3.A",
+                            "Headers"       : {
+                                                "Test"      : "HA 3",
+                                                "Message"   : "Route to A"
+                                            },
+                            "Body"          : {
+                                                "Data"      : "Route to A"
+                                            },
+                            "AppID"         : "",
+                            "ClusterID"     : "",
+                            "UserID"        : "",
+                            "MessageID"     : "",        
+                            "ContentType"   : "application/json",
+                            "Encoding"      : "",
+                            "DeliveryMode"  : "2",
+                            "Priority"      : "0",
+                            "CorrelationID" : "",
+                            "Expiration"    : "",
+                            "Timestamp"     : ""
+                        },
+                        {
+                            "NumberToSend"  : "5000",
+                            "MessageType"   : "AMQP",
+                            "Exchange"      : "HA_3.Ex",
+                            "Queue"         : "",
+                            "ReplyTo"       : "HA_3_B_Responses",
+                            "RoutingKey"    : "HA_3.B",
+                            "Headers"       : {
+                                                "Test"      : "HA 3",
+                                                "Message"   : "Route to B"
+                                            },
+                            "Body"          : {
+                                                "Data"      : "Route to B"
+                                            },
+                            "AppID"         : "",
+                            "ClusterID"     : "",
+                            "UserID"        : "",
+                            "MessageID"     : "",        
+                            "ContentType"   : "application/json",
+                            "Encoding"      : "",
+                            "DeliveryMode"  : "2",
+                            "Priority"      : "0",
+                            "CorrelationID" : "",
+                            "Expiration"    : "",
+                            "Timestamp"     : ""
+                        },
+                        {
                             "NumberToSend"  : "1",
-                            "MessageType"   : "Start Broker",
+                            "MessageType"   : "Remove All Network Latency Events",
                             "Host"          : "rabbit3",
                             "User"          : "root",
                             "Commands"      : [
-                                                "docker exec -it cluster_rabbit2_1 /opt/simulator/tools/start_node.sh"
+                                                "docker exec -it cluster_rabbit3_1 iptables -F "
                                             ],
-                            "Expected"      : {
+                            "Excepted"      : {
                                                 "Nodes" : [
                                                             {
                                                                 "Name"      : "rabbit1",
@@ -230,58 +282,6 @@
                                                             }
                                                         ]
                                             }
-                        },
-                        {
-                            "NumberToSend"  : "500",
-                            "MessageType"   : "AMQP",
-                            "Exchange"      : "HA_2.Ex",
-                            "Queue"         : "",
-                            "ReplyTo"       : "HA_2_A_Responses",
-                            "RoutingKey"    : "HA_2.A",
-                            "Headers"       : {
-                                                "Test"      : "HA 2",
-                                                "Message"   : "Route to A"
-                                            },
-                            "Body"          : {
-                                                "Data"      : "Route to A"
-                                            },
-                            "AppID"         : "",
-                            "ClusterID"     : "",
-                            "UserID"        : "",
-                            "MessageID"     : "",        
-                            "ContentType"   : "application/json",
-                            "Encoding"      : "",
-                            "DeliveryMode"  : "2",
-                            "Priority"      : "0",
-                            "CorrelationID" : "",
-                            "Expiration"    : "",
-                            "Timestamp"     : ""
-                        },
-                        {
-                            "NumberToSend"  : "500",
-                            "MessageType"   : "AMQP",
-                            "Exchange"      : "HA_2.Ex",
-                            "Queue"         : "",
-                            "ReplyTo"       : "HA_2_B_Responses",
-                            "RoutingKey"    : "HA_2.B",
-                            "Headers"       : {
-                                                "Test"      : "HA 2",
-                                                "Message"   : "Route to B"
-                                            },
-                            "Body"          : {
-                                                "Data"      : "Route to B"
-                                            },
-                            "AppID"         : "",
-                            "ClusterID"     : "",
-                            "UserID"        : "",
-                            "MessageID"     : "",        
-                            "ContentType"   : "application/json",
-                            "Encoding"      : "",
-                            "DeliveryMode"  : "2",
-                            "Priority"      : "0",
-                            "CorrelationID" : "",
-                            "Expiration"    : "",
-                            "Timestamp"     : ""
                         }
             ]
         }

@@ -44,6 +44,8 @@ RUN chmod 777 /opt/simulator/tools/reset_first_time_running.sh
 RUN chown rabbitmq:rabbitmq /var/lib/rabbitmq/.erlang.cookie
 
 # Expose ports inside the container to the host
+EXPOSE 1883
+EXPOSE 8883
 EXPOSE 5672
 EXPOSE 15672
 EXPOSE 25672
