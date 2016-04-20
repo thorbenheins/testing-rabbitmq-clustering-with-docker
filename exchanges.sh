@@ -4,7 +4,7 @@ echo ""
 echo "Displaying Cluster Exchanges"
 echo ""
 
-rabbitmqadmin list exchanges name type durable auto_delete internal policy vhost arguments
+rabbitmqadmin list exchanges name type durable auto_delete internal policy vhost arguments --host=`docker-machine ip`
 
 echo ""
 

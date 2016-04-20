@@ -1,5 +1,5 @@
-FROM levvel/rabbitclusterbase
-MAINTAINER Jay Johnson jay.p.h.johnson@gmail.com
+FROM thorbenheins/rabbitclusterbase
+MAINTAINER Thorben Heins mail+docker@thorben-heins.de
 
 # Create directories
 RUN mkdir /opt/rabbit
