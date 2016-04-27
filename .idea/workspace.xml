@@ -2,13 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="81e7f3de-0178-429b-a20f-679e00a51919" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bindings.sh" afterPath="$PROJECT_DIR$/bindings.sh" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cluster/docker-compose.yml" afterPath="$PROJECT_DIR$/cluster/docker-compose.yml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/common.sh" afterPath="$PROJECT_DIR$/common.sh" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/exchanges.sh" afterPath="$PROJECT_DIR$/exchanges.sh" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/queues.sh" afterPath="$PROJECT_DIR$/queues.sh" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/rst" afterPath="$PROJECT_DIR$/rst" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/server/Dockerfile" afterPath="$PROJECT_DIR$/server/Dockerfile" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="testing-rabbitmq-clustering-with-docker.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -346,7 +340,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="1680" height="990" extended-state="6" />
-    <editor active="true" />
+    <editor active="false" />
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
