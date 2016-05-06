@@ -9,6 +9,6 @@ echo "Done destroying containers"
 
 echo ""
 echo "Destroying all images"
-docker rmi $(docker images -a |awk '{print $3}')
+docker rmi -f    $(docker images -a |awk '{print $3}')
 echo "Done all images"
 
