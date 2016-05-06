@@ -3,6 +3,7 @@ MAINTAINER Thorben Heins mail+docker@thorben-heins.de
 
 # Create directories
 RUN mkdir /opt/rabbit
+RUN mkdir /opt/rabbit/security
 RUN mkdir /opt/simulator
 RUN mkdir /opt/simulator/tools
 
@@ -11,6 +12,9 @@ ADD rabbitmq.config     /etc/rabbitmq/
 ADD rabbitmq-env.conf   /etc/rabbitmq/
 ADD erlang.cookie       /var/lib/rabbitmq/.erlang.cookie
 ADD startclusternode.sh /opt/rabbit/
+ADD testca/cacert.pem   /opt/rabbit/security/
+ADD server/cert.pem     /opt/rabbit/security/
+ADD server/key.pem      /opt/rabbit/security/
 ADD debugnodes.sh       /opt/rabbit/
 ADD tl                  /bin/tl
 ADD rl                  /bin/rl
@@ -46,6 +50,7 @@ RUN chown rabbitmq:rabbitmq /var/lib/rabbitmq/.erlang.cookie
 # Expose ports inside the container to the host
 EXPOSE 1883
 EXPOSE 8883
+EXPOSE 5671
 EXPOSE 5672
 EXPOSE 15672
 EXPOSE 25672
